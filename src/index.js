@@ -1,8 +1,6 @@
 import {
   compose,
-  curry,
-  identity,
-  flip
+  curry
 } from 'ramda';
 import {
   startOfDay,
@@ -10,17 +8,10 @@ import {
   getTime,
   addDays,
   getDay,
-  subMonths,
   addMonths,
   format,
   isSameMonth
 } from 'date-fns';
-
-const defaultFormat = {
-  month: 'MMMM',
-  weekday: 'ddd',
-  day: 'D'
-};
 
 const defaultSelections = {
   state: 'none',
@@ -51,8 +42,6 @@ const curriedFormat = fmt => date => format(date, fmt);
 export const mapDays = mapDeep;
 
 export const formatDay = curry((fmt, day) => setPropFromProp('date', 'format', curriedFormat(fmt), day));
-
-export const formatDayR = flip(formatDay);
 
 export const formatDays = curry((fmt, cal) => mapDeep(formatDay(fmt))(cal));
 
@@ -89,7 +78,9 @@ export const updateHover = (cal, day, { start, state } = defaultSelections) => {
   })(cal);
 };
 
-export const createMonth = (date = new Date(), fns = [identity]) => {
+const defaultFns = [formatDay('D')];
+
+export const createMonth = (date = new Date(), fns = defaultFns) => {
   return (function create(val = []) {
     return (val.length > 41) ? val : create([
       ...val,
@@ -106,8 +97,13 @@ export const createMonth = (date = new Date(), fns = [identity]) => {
   })();
 };
 
-export const createCal = (date = new Date(), fns = [identity]) => [
-  createMonth(subMonths(date, 1), fns),
-  createMonth(date, fns),
-  createMonth(addMonths(date, 1), fns)
-];
+export const createCal = (date = new Date(), fns = defaultFns, monthsToShow = 1) => {
+  return (function create(cal = []) {
+    return (cal.length === monthsToShow + 2) ?
+      cal :
+      create([
+        ...cal,
+        createMonth(addMonths(date, cal.length - 1), fns)
+      ]);
+  })();
+};
