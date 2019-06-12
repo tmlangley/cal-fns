@@ -1,12 +1,13 @@
-export const alternateSelection = (cal, day, { start, end, state }) => {
+export const alternateSelection = (day, { start, end, state }) => {
   switch (state) {
     case 'none':
       return {
-        state: day.isFuture ? 'start' : 'none',
-        start: day.isFuture ? day : null,
+        state: day.disabled ? 'none' : 'start',
+        start: day.disabled ? null : day,
         end: null
       };
     case 'start':
+      if (day.disabled) return { start, end, day };
       const cond = day.ts > start.ts;
 
       return {
@@ -16,9 +17,9 @@ export const alternateSelection = (cal, day, { start, end, state }) => {
       };
     case 'both':
       return {
-        state: day.isFuture ? 'start' : 'both',
-        start: day.isFuture ? day : start,
-        end: day.isFuture ? null : end
+        state: day.disabled ? 'both' : 'start',
+        start: day.disabled ? start : day,
+        end: day.disabled ? end : null
       };
     default:
       return {
