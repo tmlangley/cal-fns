@@ -6,9 +6,12 @@ export const directInputSelection = cal => field => dayIndex => (day, selection)
   let nextStart = null;
   let nextEnd = null;
 
-  if (end && day.ts >= end.ts) {
+  if (field === 'start' && end && day.ts >= end.ts) {
     nextStart = day;
     nextEnd = cal[1].length <= dayIndex + 1 ? cal[2][0] : cal[1][dayIndex + 1];
+  } else if (field === 'end' && day.ts < start.ts) {
+    nextStart = dayIndex - 1 > 0 ? cal[1][dayIndex - 1] : cal[2][0];
+    nextEnd = day;
   } else if (field === 'start') {
     nextStart = day;
     nextEnd = end;
