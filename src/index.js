@@ -21,13 +21,16 @@ import {
 const debug = false; // [1, 14];
 let debugMonth = 0;
 
+const MID_MONTH = 15;
+const MS_IN_MONTH = 2628000000;
+
 const defaultSelections = {
   state: 'none',
   start: null,
   end: null
 };
 
-const getDayTs = compose(getTime, startOfDay);
+export const getDayTs = compose(getTime, startOfDay);
 
 const today = getDayTs(new Date());
 
@@ -61,6 +64,8 @@ const inspectFn = fn => data => {
 
 const inspectAll = pipeline => pipeline.map(inspectFn);
 
+const isMonthFuzzy = (ts1, ts2) => Math.abs(ts1 - ts2) < MS_IN_MONTH;
+
 export const mapDays = mapDeep;
 
 export const applyTransforms = curry((fns, cal) => mapDeep(compose(...fns), cal));
@@ -68,6 +73,12 @@ export const applyTransforms = curry((fns, cal) => mapDeep(compose(...fns), cal)
 export const formatDay = curry((fmt, day) => setPropFromProp('date', 'format', curriedFormat(fmt), day));
 
 export const formatDays = curry((fmt, cal) => mapDeep(formatDay(fmt))(cal));
+
+export const findDay = curry((month, date) => {
+  const dayTs = getDayTs(date);
+
+  return month.reduce((ac, current, i) => current.ts === dayTs ? i : ac, {});
+});
 
 export const updateSelection = curry(({ start, end }, d) => {
   const hoverReset = { hoverTarget: false, hoverRange: false };
@@ -108,6 +119,7 @@ export const updateHover = (cal, day, { start, state } = defaultSelections) => {
 };
 
 export const createMonth = (date = new Date(), fns = []) => {
+  console.log('creating');
   const pipeline = [
     ...fns.reverse(),
     formatDay('D'),
@@ -131,14 +143,14 @@ export const createMonth = (date = new Date(), fns = []) => {
 };
 
 export const nextMonth = curry((cal, fns) => {
-  return [...cal.slice(1), createMonth(addMonths(cal[cal.length - 1][14].date, 1), fns || [])];
+  return [...cal.slice(1), createMonth(addMonths(cal[cal.length - 1][MID_MONTH].date, 1), fns || [])];
 });
 
 export const prevMonth = curry((cal, fns) => {
-  return [createMonth(subMonths(cal[0][14].date, 1), fns || []), ...cal.slice(0, -1)];
+  return [createMonth(subMonths(cal[0][MID_MONTH].date, 1), fns || []), ...cal.slice(0, -1)];
 });
 
-export const getMonthDate = month => startOfMonth(month[14].date);
+export const getMonthDate = month => startOfMonth(month[MID_MONTH].date);
 
 export const formatDate = flip(curryN(2, format));
 
@@ -166,3 +178,6 @@ export const createCal = (date = new Date(), monthsToShow = 1, fns = []) => {
       ]);
   })();
 };
+
+export const gotoMonth = curry((cal, date, fns) => createCal(date, cal.length - 2, fns));
+

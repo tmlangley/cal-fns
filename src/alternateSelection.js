@@ -1,13 +1,16 @@
 export const alternateSelection = (day, { start, end, state }) => {
+  if (day.disabled) return { start, end, state };
+
+  const startState = {
+    state: 'start',
+    start: day,
+    end: null
+  };
+
   switch (state) {
     case 'none':
-      return {
-        state: day.disabled ? 'none' : 'start',
-        start: day.disabled ? null : day,
-        end: null
-      };
+      return startState;
     case 'start':
-      if (day.disabled) return { start, end, day };
       const cond = day.ts > start.ts;
 
       return {
@@ -16,11 +19,7 @@ export const alternateSelection = (day, { start, end, state }) => {
         end: cond ? day : null
       };
     case 'both':
-      return {
-        state: day.disabled ? 'both' : 'start',
-        start: day.disabled ? start : day,
-        end: day.disabled ? end : null
-      };
+      return startState;
     default:
       return {
         state: null,
